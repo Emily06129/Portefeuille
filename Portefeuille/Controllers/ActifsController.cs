@@ -34,7 +34,9 @@ namespace Portefeuille.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Actif>> GetActif(int id)
         {
-            var actif = await _context.Actif.FindAsync(id);
+            var actif = await _context.Actif.Include("ListeDonneeboursieres")
+                .Include("ListeAllocation")
+                .FirstOrDefaultAsync(a => a.Id == id);
 
             if (actif == null)
             {

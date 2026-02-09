@@ -16,8 +16,7 @@ namespace Portefeuille.Models
 
         public float RisqueVolatilite { get; set; }
 
-
-        public virtual ICollection<Allocation>? ListeAllocations { get; set; }
+        public virtual ICollection<Actif>? ListeActifs { get; set; }
 
         [ForeignKey("Client")]
         public int ClientId { get; set; }

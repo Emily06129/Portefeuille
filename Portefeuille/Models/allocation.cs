@@ -14,8 +14,7 @@ namespace Portefeuille.Models
 
         public float Prixpredit { set; get; }
 
-        [ForeignKey("Actif")]
-        public int ActifId { get; set; }
+     
 
         [ForeignKey("Portfolio_client")]
         public int Portfolio_clientId { get; set; }

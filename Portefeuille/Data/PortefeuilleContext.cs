@@ -14,6 +14,12 @@ namespace Portefeuille.Data
         {
         }
 
-        public DbSet<Portefeuille.Models.Actif> Actif { get; set; } = default!;
+        public DbSet<Portefeuille.Models.Actif> Actif { get; set; }
+        public DbSet<Portefeuille.Models.Donneeboursiere> Donneeboursiere { get; set; } = default!;
+        public DbSet<Portefeuille.Models.Client> Client { get; set; } = default!;
+        public DbSet<Portefeuille.Models.Allocation> Allocation { get; set; } = default!;
+        public DbSet<Portefeuille.Models.Portfolio_client> Portfolio_client { get; set; } = default!;
+       
+        
     }
 }

@@ -9,7 +9,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+//builder.Services.AddSwaggerGen();
+
+//avec IA a demandé au prof
+builder.Services.AddDbContext<PortefeuilleContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("PortefeuilleContext")));
+
 
 var app = builder.Build();
 

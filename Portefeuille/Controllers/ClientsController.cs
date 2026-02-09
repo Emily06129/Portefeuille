@@ -12,49 +12,47 @@ namespace Portefeuille.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ActifsController : ControllerBase
+    public class ClientsController : ControllerBase
     {
         private readonly PortefeuilleContext _context;
 
-        public ActifsController(PortefeuilleContext context)
+        public ClientsController(PortefeuilleContext context)
         {
             _context = context;
         }
 
-        // GET: api/Actifs
+        // GET: api/Clients
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Actif>>> GetActif()
+        public async Task<ActionResult<IEnumerable<Client>>> GetClient()
         {
-            return await _context.Actif.ToListAsync();
-
-
+            return await _context.Client.ToListAsync();
         }
 
-        // GET: api/Actifs/5
+        // GET: api/Clients/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Actif>> GetActif(int id)
+        public async Task<ActionResult<Client>> GetClient(int id)
         {
-            var actif = await _context.Actif.FindAsync(id);
+            var client = await _context.Client.FindAsync(id);
 
-            if (actif == null)
+            if (client == null)
             {
                 return NotFound();
             }
 
-            return actif;
+            return client;
         }
 
-        // PUT: api/Actifs/5
+        // PUT: api/Clients/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutActif(int id, Actif actif)
+        public async Task<IActionResult> PutClient(int id, Client client)
         {
-            if (id != actif.Id)
+            if (id != client.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(actif).State = EntityState.Modified;
+            _context.Entry(client).State = EntityState.Modified;
 
             try
             {
@@ -62,7 +60,7 @@ namespace Portefeuille.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ActifExists(id))
+                if (!ClientExists(id))
                 {
                     return NotFound();
                 }
@@ -75,36 +73,36 @@ namespace Portefeuille.Controllers
             return NoContent();
         }
 
-        // POST: api/Actifs
+        // POST: api/Clients
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Actif>> PostActif(Actif actif)
+        public async Task<ActionResult<Client>> PostClient(Client client)
         {
-            _context.Actif.Add(actif);
+            _context.Client.Add(client);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetActif", new { id = actif.Id }, actif);
+            return CreatedAtAction("GetClient", new { id = client.Id }, client);
         }
 
-        // DELETE: api/Actifs/5
+        // DELETE: api/Clients/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteActif(int id)
+        public async Task<IActionResult> DeleteClient(int id)
         {
-            var actif = await _context.Actif.FindAsync(id);
-            if (actif == null)
+            var client = await _context.Client.FindAsync(id);
+            if (client == null)
             {
                 return NotFound();
             }
 
-            _context.Actif.Remove(actif);
+            _context.Client.Remove(client);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool ActifExists(int id)
+        private bool ClientExists(int id)
         {
-            return _context.Actif.Any(e => e.Id == id);
+            return _context.Client.Any(e => e.Id == id);
         }
     }
 }

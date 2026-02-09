@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
-
+using System.ComponentModel.DataAnnotations.Schema;
 namespace Portefeuille.Models
 {
-    public class actif
+    public class Actif
     {
         public int Id { get; set; }
         [Required]
@@ -14,6 +14,8 @@ namespace Portefeuille.Models
         public string? Type { get; set; }
 
         public string? Secteur { get; set; }
+
+        public virtual ICollection<Donneeboursiere>? ListeDonneeBoursiere { get; set; }
 
     }
 }

@@ -1,4 +1,5 @@
-
+using Microsoft.EntityFrameworkCore;
+using Portefeuille.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,11 +19,11 @@ builder.Services.AddDbContext<PortefeuilleContext>(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI();
+//}
 
 app.UseHttpsRedirection();
 
@@ -30,7 +31,12 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-
+using (var serviceScope = app.Services.GetService<IServiceScopeFactory>().CreateScope())
+{
+    var context = serviceScope.ServiceProvider.GetRequiredService<PortefeuilleContext>();
+    //context.Database.EnsureDeleted();
+    context.Database.EnsureCreated();
+}
 
 
 app.Run();

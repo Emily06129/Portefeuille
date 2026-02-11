@@ -32,7 +32,12 @@ namespace Portefeuille.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Client>> GetClient(int id)
         {
-            var client = await _context.Client.FindAsync(id);
+            var client = await _context.Client
+
+                   .Include("ListePortfolio_Client.ListeActifs")
+                   .Include("ListePortfolio_Client.ListeActifs.ListeDonneeBoursieres")
+                   .Include("ListePortfolio_Client.ListeActifs.ListeAllocations")
+             .FirstOrDefaultAsync(c=> c.Id == id);
 
             if (client == null)
             {

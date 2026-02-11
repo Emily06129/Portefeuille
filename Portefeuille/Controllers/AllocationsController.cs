@@ -33,7 +33,7 @@ namespace Portefeuille.Controllers
         public async Task<ActionResult<Allocation>> GetAllocation(int id)
         {
             var allocation = await _context.Allocation.FindAsync(id);
-
+            
             if (allocation == null)
             {
                 return NotFound();

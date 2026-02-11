@@ -19,5 +19,7 @@ namespace Portefeuille.Models
 
         public virtual ICollection<Allocation>? ListeAllocations { get; set; }
 
+        [ForeignKey("Portfolio_client")]
+        public int Portfolio_clientId { get; set; }
     }
 }

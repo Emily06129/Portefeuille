@@ -16,8 +16,8 @@ namespace Portefeuille.Models
 
      
 
-        [ForeignKey("Portfolio_client")]
-        public int Portfolio_clientId { get; set; }
+        [ForeignKey("Actif")]
+        public int ActifId { get; set; }
 
 
     }

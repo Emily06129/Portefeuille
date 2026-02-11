@@ -32,8 +32,10 @@ namespace Portefeuille.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Portfolio_client>> GetPortfolio_client(int id)
         {
-            var portfolio_client = await _context.Portfolio_client.FindAsync(id);
-
+            var portfolio_client = await _context.Portfolio_client.Include("ListeActifs")
+               .Include("ListeActifs.ListeDonneeBoursieres")
+               .Include("ListeActifs.ListeAllocations")
+               .FirstOrDefaultAsync(p => p.Id == id);
             if (portfolio_client == null)
             {
                 return NotFound();

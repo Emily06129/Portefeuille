@@ -1,6 +1,4 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Portefeuille.Data;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,12 +24,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-using (var serviceScope = app.Services.GetService<IServiceScopeFactory>().CreateScope())
-{
-    var context = serviceScope.ServiceProvider.GetRequiredService<PortefeuilleContext>();
-    context.Database.EnsureDeleted();
-    context.Database.EnsureCreated();
-}
+
 
 
 app.Run();

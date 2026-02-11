@@ -15,7 +15,9 @@ namespace Portefeuille.Models
 
         public string? Secteur { get; set; }
 
-        public virtual ICollection<Donneeboursiere>? ListeDonneeBoursiere { get; set; }
+        public virtual ICollection<Donneeboursiere>? ListeDonneeBoursieres { get; set; }
+
+        public virtual ICollection<Allocation>? ListeAllocations { get; set; }
 
     }
 }

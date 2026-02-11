@@ -12,51 +12,47 @@ namespace Portefeuille.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ActifsController : ControllerBase
+    public class AllocationsController : ControllerBase
     {
         private readonly PortefeuilleContext _context;
 
-        public ActifsController(PortefeuilleContext context)
+        public AllocationsController(PortefeuilleContext context)
         {
             _context = context;
         }
 
-        // GET: api/Actifs
+        // GET: api/Allocations
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Actif>>> GetActif()
+        public async Task<ActionResult<IEnumerable<Allocation>>> GetAllocation()
         {
-            return await _context.Actif.ToListAsync();
-
-
+            return await _context.Allocation.ToListAsync();
         }
 
-        // GET: api/Actifs/5
+        // GET: api/Allocations/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Actif>> GetActif(int id)
+        public async Task<ActionResult<Allocation>> GetAllocation(int id)
         {
-            var actif = await _context.Actif.Include("ListeDonneeboursieres")
-                .Include("ListeAllocation")
-                .FirstOrDefaultAsync(a => a.Id == id);
+            var allocation = await _context.Allocation.FindAsync(id);
 
-            if (actif == null)
+            if (allocation == null)
             {
                 return NotFound();
             }
 
-            return actif;
+            return allocation;
         }
 
-        // PUT: api/Actifs/5
+        // PUT: api/Allocations/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutActif(int id, Actif actif)
+        public async Task<IActionResult> PutAllocation(int id, Allocation allocation)
         {
-            if (id != actif.Id)
+            if (id != allocation.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(actif).State = EntityState.Modified;
+            _context.Entry(allocation).State = EntityState.Modified;
 
             try
             {
@@ -64,7 +60,7 @@ namespace Portefeuille.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ActifExists(id))
+                if (!AllocationExists(id))
                 {
                     return NotFound();
                 }
@@ -77,36 +73,36 @@ namespace Portefeuille.Controllers
             return NoContent();
         }
 
-        // POST: api/Actifs
+        // POST: api/Allocations
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Actif>> PostActif(Actif actif)
+        public async Task<ActionResult<Allocation>> PostAllocation(Allocation allocation)
         {
-            _context.Actif.Add(actif);
+            _context.Allocation.Add(allocation);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetActif", new { id = actif.Id }, actif);
+            return CreatedAtAction("GetAllocation", new { id = allocation.Id }, allocation);
         }
 
-        // DELETE: api/Actifs/5
+        // DELETE: api/Allocations/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteActif(int id)
+        public async Task<IActionResult> DeleteAllocation(int id)
         {
-            var actif = await _context.Actif.FindAsync(id);
-            if (actif == null)
+            var allocation = await _context.Allocation.FindAsync(id);
+            if (allocation == null)
             {
                 return NotFound();
             }
 
-            _context.Actif.Remove(actif);
+            _context.Allocation.Remove(allocation);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool ActifExists(int id)
+        private bool AllocationExists(int id)
         {
-            return _context.Actif.Any(e => e.Id == id);
+            return _context.Allocation.Any(e => e.Id == id);
         }
     }
 }

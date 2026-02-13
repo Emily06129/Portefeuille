@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36915.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Portefeuille", "Portefeuille\Portefeuille.csproj", "{5F2EFB5F-19A3-456C-BB3E-2E796308E33C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "web_portefeuille", "web_portefeuille\web_portefeuille.csproj", "{C41FC531-8CA9-47CF-B68A-87DF9F60CAFD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5F2EFB5F-19A3-456C-BB3E-2E796308E33C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F2EFB5F-19A3-456C-BB3E-2E796308E33C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F2EFB5F-19A3-456C-BB3E-2E796308E33C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F2EFB5F-19A3-456C-BB3E-2E796308E33C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C41FC531-8CA9-47CF-B68A-87DF9F60CAFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C41FC531-8CA9-47CF-B68A-87DF9F60CAFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C41FC531-8CA9-47CF-B68A-87DF9F60CAFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C41FC531-8CA9-47CF-B68A-87DF9F60CAFD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {57739613-C704-47F5-A7EC-FFF8C0DD9377}
+	EndGlobalSection
+EndGlobal

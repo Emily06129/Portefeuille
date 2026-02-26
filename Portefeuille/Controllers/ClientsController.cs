@@ -109,5 +109,35 @@ namespace Portefeuille.Controllers
         {
             return _context.Client.Any(e => e.Id == id);
         }
+        // Register
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(Client client)
+        {
+            _context.Client.Add(client);
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        // =======================
+        // LOGIN
+        // =======================
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(Client login)
+        {
+            // On cherche un client avec le même email et mot de passe
+            var client = await _context.Client
+                .FirstOrDefaultAsync(c =>
+                    c.Email == login.Email &&
+                    c.Password == login.Password);
+
+            if (client == null)
+            {
+                return Unauthorized(); // 401
+            }
+
+            return Ok(client); // 200
+        }
     }
 }

@@ -31,22 +31,25 @@ namespace web_portefeuille.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(Client client)
         {
-            var json = JsonSerializer.Serialize(client);// Convertir un client en JSON
+            var json = JsonSerializer.Serialize(client);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await _httpClient.PostAsync(
-                "http://localhost:5172/Portefeuille/Clients/register",
+                "http://localhost:5172/api/Clients/register",
                 content);
+
+            // Lire le détail de l'erreur
+            var responseBody = await response.Content.ReadAsStringAsync();
 
             if (response.IsSuccessStatusCode)
             {
                 return RedirectToAction("Login");
             }
 
-            ViewBag.Error = "Erreur lors de l'inscription";
+            // Afficher le vrai message d'erreur
+            ViewBag.Error = $"Erreur {(int)response.StatusCode}: {responseBody}";
             return View();
         }
-
         // =========================
         // PAGE CONNEXION
         // =========================
@@ -57,22 +60,23 @@ namespace web_portefeuille.Controllers
             return View();
         }
 
+        
         [HttpPost]
         public async Task<IActionResult> Login(Client client)
         {
             var json = JsonSerializer.Serialize(client);
+            Console.WriteLine("JSON envoyé : " + json);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-
             var response = await _httpClient.PostAsync(
-                "https://localhost:5172/Portefeuille/Clients/login",
+                "http://localhost:5172/api/Clients/login",
                 content);
-
+            var responseBody = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Réponse : " + (int)response.StatusCode + " " + responseBody);
             if (response.IsSuccessStatusCode)
             {
                 return RedirectToAction("Index", "Home");
             }
-
-            ViewBag.Error = "Email ou mot de passe incorrect";
+            ViewBag.Error = $"Erreur {(int)response.StatusCode}: {responseBody}";
             return View();
         }
     }

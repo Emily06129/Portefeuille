@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Portefeuille.Data;
 
@@ -11,9 +12,11 @@ using Portefeuille.Data;
 namespace Portefeuille.Migrations
 {
     [DbContext(typeof(PortefeuilleContext))]
-    partial class PortefeuilleContextModelSnapshot : ModelSnapshot
+    [Migration("20260228150548_AddPasswordToClient")]
+    partial class AddPasswordToClient
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

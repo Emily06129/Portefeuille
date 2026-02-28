@@ -1,32 +1,87 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
-@model web_portefeuille.Models.Client
+﻿@model web_portefeuille.Models.Client
+<style>
+    body {
+        background-color: #1a2744;
+        color: white;
+    }
 
-<h2>Inscription</h2>
+    .form-container {
+        max-width: 450px;
+        margin: 80px auto;
+        background-color: #243558;
+        padding: 40px;
+        border-radius: 16px;
+    }
 
-<form asp-action="Register" method="post">
-    <div>
-        <label>Nom</label>
-        <input asp-for="Nom" />
-    </div>
+    h2 {
+        text-align: center;
+        margin-bottom: 30px;
+    }
 
-    <div>
-        <label>Email</label>
-        <input asp-for="Email" />
-    </div>
+    .form-container div {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 15px;
+    }
 
-    <div>
-        <label>Mot de passe</label>
-        <input asp-for="Password" type="password" />
-    </div>
+    .form-container label {
+        font-size: 0.9rem;
+        color: #a0b0c8;
+        margin-bottom: 6px;
+    }
 
-    <button type="submit">S'inscrire</button>
-</form>
+    .form-container input {
+        background-color: #1a2744;
+        border: 1px solid #3a5070;
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: white;
+        font-size: 0.95rem;
+    }
 
-@if (ViewBag.Error != null)
-{
-    <p style="color:red">@ViewBag.Error</p>
-}
+    .form-container button {
+        width: 100%;
+        padding: 12px;
+        background-color: #00c878;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    .navbar {
+        background-color: #1a2744 !important;
+    }
+
+        .navbar a {
+            color: white !important;
+        }
+
+</style>
+
+<div class="form-container">
+    <h2>Inscription</h2>
+    <form asp-action="Register" method="post">
+        <div>
+            <label>Nom</label>
+            <input asp-for="Nom" />
+        </div>
+        <div>
+            <label>Email</label>
+            <input asp-for="Email" />
+        </div>
+        <div>
+            <label>Mot de passe</label>
+            <input asp-for="Password" type="password" />
+        </div>
+        <button type="submit">S'inscrire</button>
+    </form>
+
+    @if (ViewBag.Error != null)
+    {
+        <p style="color:red">@ViewBag.Error</p>
+    }
+</div>

@@ -1,10 +1,127 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Accueil";
 }
+<style>
+    body {
+        background-color: #1a2744;
+        color: white;
+    }
+    .gestion {
+        text-align: center;
+        padding: 80px 20px;
+    }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+        .gestion h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .gestion p {
+            font-size: 1.2rem;
+            color: gray;
+            margin-bottom: 30px;
+        }
+
+    .boutons {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+    }
+
+        .boutons a {
+            padding: 12px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+            /* Bouton vert premier bouton - Inscription */
+            .boutons a:first-child {
+                background-color: #00c878;
+                color: white;
+            }
+
+            /* Bouton transparent dernier bouton - Connexion */
+            .boutons a:last-child {
+                background-color: #00c878;
+                color: white;
+            }
+
+    /* Conteneur des cartes */
+    .features {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        padding: 60px 40px;
+    }
+
+    /* Mise en forme des cartes */
+    .carte {
+        background-color: #243558;
+        border-radius: 12px;
+        padding: 30px;
+        color: white;
+    }
+
+        .carte h3 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .carte p {
+            color: #a0b0c8;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* Effet de survol */
+
+
+        .carte:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+    .navbar {
+        background-color: #1a2744 !important;
+    }
+
+        .navbar a {
+            color: white !important;
+        }
+</style>
+<div class="gestion">
+    <h1>Optimisez votre portefeuille en un clic</h1>
+    <p>Sélectionnez vos actifs, notre algorithme calcule la meilleure répartition pour vous.</p>
+
+    <!-- boutons -->
+
+    <div class="boutons">  
+        <a asp-controller="Account" asp-action="Register">Commencer gratuitement</a>
+        <a asp-controller="Account" asp-action="Login">Se connecter</a>
+    </div>
+    <!-- Section fonctionnalités -->
+    <div class="features">
+
+        <!-- Carte 1 -->
+        <div class="carte">
+            <h3>Allocation Optimale</h3>
+            <p>Notre algorithme calcule la répartition idéale de votre capital entre chaque actif.</p>
+        </div>
+
+        <!-- Carte 2 -->
+        <div class="carte">
+            <h3>Prédiction ML</h3>
+            <p>Le moteur ML.NET prédit l'évolution future de chaque actif.</p>
+        </div>
+
+        <!-- Carte 3 -->
+        <div class="carte">
+            <h3> Analyse du Risque</h3>
+            <p>Visualisez la volatilité de votre portefeuille avant d'investir.</p>
+        </div>
+
+    </div>
 </div>
-<a asp-controller="Account" asp-action="Register">Inscription</a>
-<a asp-controller="Account" asp-action="Login">Connexion</a>

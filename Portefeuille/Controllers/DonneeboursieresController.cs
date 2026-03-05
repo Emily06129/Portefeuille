@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Portefeuille.Data;
 using Portefeuille.Models;
+using Portefeuille.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace Portefeuille.Controllers
 {
@@ -15,10 +18,12 @@ namespace Portefeuille.Controllers
     public class DonneeboursieresController : ControllerBase
     {
         private readonly PortefeuilleContext _context;
-
-        public DonneeboursieresController(PortefeuilleContext context)
+        private readonly YahooFinanceService _yahooService;
+        public DonneeboursieresController(PortefeuilleContext context,
+                                          YahooFinanceService yahooService)
         {
             _context = context;
+            _yahooService = yahooService;
         }
 
         // GET: api/Donneeboursieres
@@ -103,6 +108,54 @@ namespace Portefeuille.Controllers
         private bool DonneeboursiereExists(int id)
         {
             return _context.Donneeboursiere.Any(e => e.Id == id);
+        }
+    
+    // POST: api/Donneeboursieres/fetch/1
+        [HttpPost("fetch/{actifId}")]
+        public async Task<IActionResult> FetchForActif(int actifId)
+        {
+            var result = await _yahooService.FetchAndSaveAsync(actifId);
+
+            if (result == null)
+                return BadRequest(new
+                {
+                    message = "Échec. Vérifiez que l'actif existe et que son Symbole est valide."
+                });
+
+            return Ok(new
+            {
+                message = "Données récupérées et sauvegardées !",
+                actifId = result.ActifId,
+                cloture = result.Cloture,
+                volume = result.Volume,
+                date = result.Date
+            });
+        }
+
+        // POST: api/Donneeboursieres/fetch-all
+        [HttpPost("fetch-all")]
+        public async Task<IActionResult> FetchAll()
+        {
+            var resultats = await _yahooService.FetchAllActifsAsync();
+
+            return Ok(new
+            {
+                message = $"{resultats.Count} actif(s) mis à jour avec succès.",
+                donneesAjoutees = resultats
+            });
+        }
+
+        // GET: api/Donneeboursieres/actif/1
+        [HttpGet("actif/{actifId}")]
+        public async Task<IActionResult> GetByActif(int actifId, [FromQuery] int limit = 100)
+        {
+            var donnees = await _context.Donneeboursiere
+                .Where(d => d.ActifId == actifId)
+                .OrderByDescending(d => d.Date)
+                .Take(limit)
+                .ToListAsync();
+
+            return Ok(donnees);
         }
     }
 }

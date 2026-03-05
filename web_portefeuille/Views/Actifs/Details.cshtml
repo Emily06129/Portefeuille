@@ -1,0 +1,298 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@* Pas de @model car on utilise ViewBag *@
+@{
+    ViewData["Title"] = "Détail Actif";
+    var actif = ViewBag.Actif as web_portefeuille.Models.Actif;
+    var donnees = ViewBag.Donnees as List<web_portefeuille.Models.Donneeboursiere>
+                  ?? new List<web_portefeuille.Models.Donneeboursiere>();
+}
+
+<style>
+    body { background-color: #1a2744; color: white; }
+
+    .page-header {
+        padding: 40px 40px 20px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .btn-retour {
+        background-color: #243558;
+        color: #a0b0c8;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+    .btn-retour:hover {
+        background-color: #2e4270;
+        color: white;
+        text-decoration: none;
+    }
+
+    .titre-actif h1 { font-size: 2rem; margin: 0; }
+    .titre-actif .sym {
+        color: #00c878;
+        font-size: 1rem;
+        font-weight: bold;
+    }
+
+    /* ── Badge ── */
+    .badge {
+        display: inline-block;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    .badge-action { background-color: rgba(0,120,255,0.2); color: #4da6ff; }
+    .badge-crypto { background-color: rgba(255,165,0,0.2); color: #ffaa33; }
+
+    /* ── Cartes de stats ── */
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        padding: 20px 40px;
+    }
+
+    .stat-carte {
+        background-color: #243558;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+    }
+    .stat-carte .label {
+        color: #a0b0c8;
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+    }
+    .stat-carte .valeur {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #00c878;
+    }
+
+    /* ── Graphique ── */
+    .graphique-container {
+        background-color: #243558;
+        border-radius: 12px;
+        padding: 30px;
+        margin: 0 40px 40px;
+    }
+    .graphique-container h2 {
+        font-size: 1.1rem;
+        color: #a0b0c8;
+        margin-bottom: 20px;
+    }
+
+    /* ── Tableau des données ── */
+    .tableau-container {
+        background-color: #243558;
+        border-radius: 12px;
+        padding: 30px;
+        margin: 0 40px 60px;
+    }
+    .tableau-container h2 {
+        font-size: 1.1rem;
+        margin-bottom: 20px;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+        color: #a0b0c8;
+        font-size: 0.85rem;
+        text-align: left;
+        padding: 10px;
+        border-bottom: 1px solid #1a2744;
+    }
+    tbody td {
+        padding: 12px 10px;
+        border-bottom: 1px solid #1a2744;
+        font-size: 0.9rem;
+    }
+    tbody tr:hover { background-color: rgba(255,255,255,0.03); }
+
+    .prix-valeur { color: #00c878; font-weight: bold; }
+
+    /* ── Message vide ── */
+    .vide {
+        text-align: center;
+        color: #a0b0c8;
+        padding: 40px;
+    }
+
+    /* ── Erreur ── */
+    .alerte-erreur {
+        background-color: rgba(255,77,77,0.1);
+        border: 1px solid #ff4d4d;
+        color: #ff4d4d;
+        padding: 15px 30px;
+        border-radius: 10px;
+        margin: 20px 40px;
+        text-align: center;
+    }
+</style>
+
+@* ── Erreur ── *@
+@if (ViewBag.Erreur != null)
+{
+    <div class="alerte-erreur">⚠️ @ViewBag.Erreur</div>
+}
+
+@if (actif != null)
+{
+    @* ── En-tête ── *@
+    <div class="page-header">
+        <a class="btn-retour" asp-controller="Actifs" asp-action="Index">
+            ← Retour
+        </a>
+        <div class="titre-actif">
+            <span class="badge @(actif.Type == "Crypto" ? "badge-crypto" : "badge-action")">
+                @(actif.Type == "Crypto" ? "₿ Crypto" : "📈 Action")
+            </span>
+            <h1>@actif.Nom</h1>
+            <div class="sym">@actif.Symbole · @actif.Secteur</div>
+        </div>
+    </div>
+
+    @* ── Cartes de stats (dernière donnée) ── *@
+    @if (donnees.Any())
+    {
+        var derniere = donnees.First(); // Les données sont triées par date DESC
+        var premiere = donnees.Last();
+        var variation = premiere.Cloture > 0
+            ? ((derniere.Cloture - premiere.Cloture) / premiere.Cloture) * 100
+            : 0;
+
+        <div class="stats">
+            <div class="stat-carte">
+                <div class="label">Prix actuel</div>
+                <div class="valeur">@derniere.Cloture.ToString("F2") $</div>
+            </div>
+            <div class="stat-carte">
+                <div class="label">Volume</div>
+                <div class="valeur">@derniere.Volume.ToString("N0")</div>
+            </div>
+            <div class="stat-carte">
+                <div class="label">Variation</div>
+                <div class="valeur" style="color: @(variation >= 0 ? "#00c878" : "#ff4d4d")">
+                    @(variation >= 0 ? "+" : "")@variation.ToString("F2")%
+                </div>
+            </div>
+            <div class="stat-carte">
+                <div class="label">Dernière MAJ</div>
+                <div class="valeur" style="font-size:1rem">
+                    @derniere.Date.ToString("dd/MM HH:mm")
+                </div>
+            </div>
+        </div>
+
+        @* ── Graphique Chart.js ── *@
+        <div class="graphique-container">
+            <h2>📈 Évolution du prix de clôture</h2>
+            <canvas id="graphique" height="80"></canvas>
+        </div>
+
+        @* ── Tableau des données brutes ── *@
+        <div class="tableau-container">
+            <h2>📋 Historique des données (@donnees.Count entrées)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Prix de clôture</th>
+                        <th>Volume</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in donnees)
+                    {
+                        <tr>
+                            <td>@d.Date.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="prix-valeur">@d.Cloture.ToString("F2") $</td>
+                            <td>@d.Volume.ToString("N0")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="vide">
+            <p>Aucune donnée boursière disponible pour cet actif.</p>
+            <p style="color:#a0b0c8; font-size:0.9rem">
+                Faites un fetch depuis Swagger :
+                POST /api/donneeboursieres/fetch/@actif.Id
+            </p>
+        </div>
+    }
+}
+
+@* ── Script Chart.js (graphique) ── *@
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Récupère les données depuis le serveur (Razor → JS)
+    // Les données sont triées DESC donc on les inverse pour le graphique
+    const labels = @Html.Raw(
+        System.Text.Json.JsonSerializer.Serialize(
+            donnees.AsEnumerable().Reverse()
+                   .Select(d => d.Date.ToString("dd/MM HH:mm"))
+                   .ToList()
+        )
+    );
+
+    const prix = @Html.Raw(
+        System.Text.Json.JsonSerializer.Serialize(
+            donnees.AsEnumerable().Reverse()
+                   .Select(d => Math.Round(d.Cloture, 2))
+                   .ToList()
+        )
+    );
+
+    // Crée le graphique
+    const ctx = document.getElementById('graphique').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Prix de clôture ($)',
+                data: prix,
+                borderColor: '#00c878',
+                backgroundColor: 'rgba(0, 200, 120, 0.08)',
+                borderWidth: 2,
+                pointRadius: 3,
+                pointBackgroundColor: '#00c878',
+                fill: true,
+                tension: 0.3  // Courbe lissée
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: { color: '#a0b0c8' }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#a0b0c8', maxTicksLimit: 10 },
+                    grid:  { color: 'rgba(255,255,255,0.05)' }
+                },
+                y: {
+                    ticks: { color: '#a0b0c8' },
+                    grid:  { color: 'rgba(255,255,255,0.05)' }
+                }
+            }
+        }
+    });
+</script>
+}

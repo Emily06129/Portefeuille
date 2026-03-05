@@ -1,0 +1,192 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
+@* Indique que cette vue reçoit une List<Actif> depuis le controller *@
+@model List<web_portefeuille.Models.Actif>
+
+@{
+    ViewData["Title"] = "Actifs disponibles";
+}
+
+<style>
+    body {
+        background-color: #1a2744;
+        color: white;
+    }
+
+    /* ── Titre de la page ── */
+    .page-titre {
+        text-align: center;
+        padding: 50px 20px 20px;
+    }
+    .page-titre h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+    .page-titre p {
+        color: #a0b0c8;
+        font-size: 1rem;
+    }
+
+    /* ── Boutons de filtre ── */
+    .filtres {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 20px 0 30px;
+    }
+    .filtres button {
+        padding: 10px 24px;
+        border-radius: 8px;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 0.95rem;
+        transition: opacity 0.2s;
+    }
+    .filtres button:hover  { opacity: 0.8; }
+    .btn-tous              { background-color: #00c878; color: white; }
+    .btn-action            { background-color: #243558; color: #4da6ff; }
+    .btn-crypto            { background-color: #243558; color: #ffaa33; }
+
+    /* ── Grille des cartes ── */
+    .grille-actifs {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        padding: 20px 40px 60px;
+    }
+
+    /* ── Carte d'un actif ── */
+    .carte-actif {
+        background-color: #243558;
+        border-radius: 12px;
+        padding: 24px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        color: white;
+        display: block;
+        border: 1px solid transparent;
+    }
+    .carte-actif:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 200, 120, 0.15);
+        border-color: #00c878;
+        color: white;
+        text-decoration: none;
+    }
+
+    /* ── Badge Action / Crypto ── */
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-bottom: 12px;
+    }
+    .badge-action { background-color: rgba(0,120,255,0.2); color: #4da6ff; }
+    .badge-crypto { background-color: rgba(255,165,0,0.2); color: #ffaa33; }
+
+    .carte-actif h3   { font-size: 1.1rem; margin-bottom: 6px; }
+    .carte-actif .sym { color: #00c878; font-size: 0.9rem; font-weight: bold; }
+    .carte-actif .sec { color: #a0b0c8; font-size: 0.8rem; margin-top: 6px; }
+
+    /* ── Message erreur ── */
+    .alerte-erreur {
+        background-color: rgba(255,77,77,0.1);
+        border: 1px solid #ff4d4d;
+        color: #ff4d4d;
+        padding: 15px 30px;
+        border-radius: 10px;
+        margin: 20px 40px;
+        text-align: center;
+    }
+
+    /* ── Message liste vide ── */
+    .vide {
+        text-align: center;
+        color: #a0b0c8;
+        padding: 60px;
+        font-size: 1.1rem;
+    }
+</style>
+
+@* ── Titre ── *@
+<div class="page-titre">
+    <h1>Actifs disponibles</h1>
+    <p>Cliquez sur un actif pour voir son évolution</p>
+</div>
+
+@* ── Message erreur si API inaccessible ── *@
+@if (ViewBag.Erreur != null)
+{
+    <div class="alerte-erreur">
+        ⚠️ @ViewBag.Erreur
+    </div>
+}
+
+@* ── Boutons de filtre (seulement si on a des actifs) ── *@
+@if (Model.Any())
+{
+    <div class="filtres">
+        <button class="btn-tous" onclick="filtrer('tous')">
+            Tous (@Model.Count)
+        </button>
+        <button class="btn-action" onclick="filtrer('Action')">
+            📈 Actions (@Model.Count(a => a.Type == "Action"))
+        </button>
+        <button class="btn-crypto" onclick="filtrer('Crypto')">
+            ₿ Cryptos (@Model.Count(a => a.Type == "Crypto"))
+        </button>
+    </div>
+
+    @* ── Grille des cartes actifs ── *@
+    <div class="grille-actifs" id="grille">
+        @foreach (var actif in Model)
+        {
+            @* Chaque carte est un lien vers Details/id *@
+            <a class="carte-actif"
+               data-type="@actif.Type"
+               asp-controller="Actifs"
+               asp-action="Details"
+               asp-route-id="@actif.Id">
+
+                @* Badge coloré selon le type *@
+                <span class="badge @(actif.Type == "Crypto" ? "badge-crypto" : "badge-action")">
+                    @(actif.Type == "Crypto" ? "₿ Crypto" : "📈 Action")
+                </span>
+
+                <h3>@actif.Nom</h3>
+                <div class="sym">@actif.Symbole</div>
+                <div class="sec">@actif.Secteur</div>
+            </a>
+        }
+    </div>
+}
+else if (ViewBag.Erreur == null)
+{
+    @* Aucun actif en BDD *@
+    <div class="vide">
+        Aucun actif disponible pour le moment.
+    </div>
+}
+
+@* ── Script filtre sans rechargement de page ── *@
+<script>
+    function filtrer(type) {
+        // Parcourt toutes les cartes
+        document.querySelectorAll('.carte-actif').forEach(carte => {
+            if (type === 'tous') {
+                // Affiche tout
+                carte.style.display = 'block';
+            } else {
+                // Affiche uniquement le type choisi (Action ou Crypto)
+                carte.style.display =
+                    carte.dataset.type === type ? 'block' : 'none';
+            }
+        });
+    }
+</script>

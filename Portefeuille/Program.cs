@@ -72,7 +72,7 @@ using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>(
         context.SaveChanges(); // ← IMPORTANT : sauvegarde maintenant
                                //   pour générer portfolio.Id
 
-
+        
         var actifs = new List<Actif>
         {
             // 10 ACTIONS 

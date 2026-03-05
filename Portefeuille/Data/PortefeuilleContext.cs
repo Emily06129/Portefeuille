@@ -9,7 +9,7 @@ namespace Portefeuille.Data
 {
     public class PortefeuilleContext(DbContextOptions<PortefeuilleContext> options) : DbContext(options)
     {
-        internal readonly object Actifs;
+        
 
         public DbSet<Portefeuille.Models.Actif> Actif { get; set; }
         public DbSet<Portefeuille.Models.Donneeboursiere> Donneeboursiere { get; set; } = default!;

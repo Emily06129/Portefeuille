@@ -88,7 +88,61 @@
     .graphique-container h2 {
         font-size: 1.1rem;
         color: #a0b0c8;
+        margin-bottom: 16px;
+    }
+
+    /* ── Boutons de période ── */
+    .periode-btns {
+        display: flex;
+        gap: 8px;
         margin-bottom: 20px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .periode-btn {
+        background-color: #1a2744;
+        color: #a0b0c8;
+        border: 1px solid #2e4270;
+        padding: 6px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        font-weight: 500;
+    }
+    .periode-btn:hover {
+        background-color: rgba(0, 200, 120, 0.15);
+        color: #00c878;
+        border-color: #00c878;
+    }
+    .periode-btn.actif {
+        background-color: #00c878;
+        color: #1a2744;
+        border-color: #00c878;
+        font-weight: bold;
+    }
+    .reset-zoom-btn {
+        background-color: #1a2744;
+        color: #a0b0c8;
+        border: 1px solid #2e4270;
+        padding: 6px 14px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        margin-left: auto;
+        transition: all 0.2s;
+    }
+    .reset-zoom-btn:hover {
+        background-color: #2e4270;
+        color: white;
+    }
+
+    /* ── Info zoom ── */
+    .zoom-info {
+        font-size: 0.78rem;
+        color: #5a6a80;
+        margin-top: 10px;
+        text-align: right;
     }
 
     /* ── Tableau des données ── */
@@ -164,7 +218,7 @@
     @* ── Cartes de stats (dernière donnée) ── *@
     @if (donnees.Any())
     {
-        var derniere = donnees.First(); // Les données sont triées par date DESC
+        var derniere = donnees.First(); @* Les données sont triées par date DESC *@
         var premiere = donnees.Last();
         var variation = premiere.Cloture > 0
             ? ((derniere.Cloture - premiere.Cloture) / premiere.Cloture) * 100
@@ -180,7 +234,7 @@
                 <div class="valeur">@derniere.Volume.ToString("N0")</div>
             </div>
             <div class="stat-carte">
-                <div class="label">Variation</div>
+                <div class="label">Variation (@donnees.Count j)</div>
                 <div class="valeur" style="color: @(variation >= 0 ? "#00c878" : "#ff4d4d")">
                     @(variation >= 0 ? "+" : "")@variation.ToString("F2")%
                 </div>
@@ -188,7 +242,7 @@
             <div class="stat-carte">
                 <div class="label">Dernière MAJ</div>
                 <div class="valeur" style="font-size:1rem">
-                    @derniere.Date.ToString("dd/MM HH:mm")
+                    @derniere.Date.ToString("dd/MM/yyyy")
                 </div>
             </div>
         </div>
@@ -196,7 +250,21 @@
         @* ── Graphique Chart.js ── *@
         <div class="graphique-container">
             <h2>📈 Évolution du prix de clôture</h2>
+
+            @* ── Boutons de période ── *@
+            <div class="periode-btns">
+                <button class="periode-btn" onclick="filtrerPeriode(7, this)">7J</button>
+                <button class="periode-btn" onclick="filtrerPeriode(30, this)">1M</button>
+                <button class="periode-btn" onclick="filtrerPeriode(90, this)">3M</button>
+                <button class="periode-btn" onclick="filtrerPeriode(180, this)">6M</button>
+                <button class="periode-btn" onclick="filtrerPeriode(365, this)">1A</button>
+                <button class="periode-btn" onclick="filtrerPeriode(730, this)">2A</button>
+                <button class="periode-btn actif" onclick="toutAfficher(this)">Tout</button>
+                <button class="reset-zoom-btn" onclick="chart.resetZoom()">🔍 Reset zoom</button>
+            </div>
+
             <canvas id="graphique" height="80"></canvas>
+            <div class="zoom-info">🖱️ Molette pour zoomer · Clic + glisser pour naviguer</div>
         </div>
 
         @* ── Tableau des données brutes ── *@
@@ -214,7 +282,7 @@
                     @foreach (var d in donnees)
                     {
                         <tr>
-                            <td>@d.Date.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@d.Date.ToString("dd/MM/yyyy")</td>
                             <td class="prix-valeur">@d.Cloture.ToString("F2") $</td>
                             <td>@d.Volume.ToString("N0")</td>
                         </tr>
@@ -228,71 +296,175 @@
         <div class="vide">
             <p>Aucune donnée boursière disponible pour cet actif.</p>
             <p style="color:#a0b0c8; font-size:0.9rem">
-                Faites un fetch depuis Swagger :
-                POST /api/donneeboursieres/fetch/@actif.Id
+                Faites un fetch depuis l'API :
+                POST /api/donneeboursieres/fetch-all
             </p>
         </div>
     }
 }
 
-@* ── Script Chart.js (graphique) ── *@
+@* ── Scripts Chart.js + Zoom ── *@
 @section Scripts {
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Récupère les données depuis le serveur (Razor → JS)
-    // Les données sont triées DESC donc on les inverse pour le graphique
-    const labels = @Html.Raw(
-        System.Text.Json.JsonSerializer.Serialize(
-            donnees.AsEnumerable().Reverse()
-                   .Select(d => d.Date.ToString("dd/MM HH:mm"))
-                   .ToList()
-        )
-    );
+    @* Chart.js doit être chargé AVANT le plugin zoom *@
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 
-    const prix = @Html.Raw(
-        System.Text.Json.JsonSerializer.Serialize(
-            donnees.AsEnumerable().Reverse()
-                   .Select(d => Math.Round(d.Cloture, 2))
-                   .ToList()
-        )
-    );
+    <script>
+        
+        // DONNÉES : injectées depuis Razor (C#) vers JavaScript
+        // Les données arrivent triées DESC (plus récent en premier)
+        // On les inverse (.Reverse()) pour avoir l'ordre chronologique
+        
+        const toutesLesDonnees = {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                donnees.AsEnumerable().Reverse()
+                       .Select(d => d.Date.ToString("dd/MM/yyyy"))
+                       .ToList()
+            )),
+            prix: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                donnees.AsEnumerable().Reverse()
+                       .Select(d => Math.Round(d.Cloture, 2))
+                       .ToList()
+            ))
+        };
 
-    // Crée le graphique
-    const ctx = document.getElementById('graphique').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Prix de clôture ($)',
-                data: prix,
-                borderColor: '#00c878',
-                backgroundColor: 'rgba(0, 200, 120, 0.08)',
-                borderWidth: 2,
-                pointRadius: 3,
-                pointBackgroundColor: '#00c878',
-                fill: true,
-                tension: 0.3  // Courbe lissée
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    labels: { color: '#a0b0c8' }
-                }
+      
+        // CRÉATION DU GRAPHIQUE
+       
+        const ctx = document.getElementById('graphique').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: toutesLesDonnees.labels,
+                datasets: [{
+                    label: 'Prix de clôture ($)',
+                    data: toutesLesDonnees.prix,
+                    borderColor: '#00c878',
+                    backgroundColor: 'rgba(0, 200, 120, 0.08)',
+                    borderWidth: 2,
+                    // pointRadius 0 = points invisibles par défaut (plus lisible avec 750+ points)
+                    pointRadius: 0,
+                    // pointHoverRadius = point visible au survol
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: '#00c878',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                }]
             },
-            scales: {
-                x: {
-                    ticks: { color: '#a0b0c8', maxTicksLimit: 10 },
-                    grid:  { color: 'rgba(255,255,255,0.05)' }
+            options: {
+                responsive: true,
+                // interaction : comment le tooltip réagit à la souris
+                interaction: {
+                    mode: 'index',       // Affiche le tooltip pour toute la colonne verticale
+                    intersect: false     // Pas besoin d'être exactement sur un point
                 },
-                y: {
-                    ticks: { color: '#a0b0c8' },
-                    grid:  { color: 'rgba(255,255,255,0.05)' }
+                plugins: {
+                    legend: {
+                        labels: { color: '#a0b0c8' }
+                    },
+                    // ── Tooltip personnalisé ──
+                    tooltip: {
+                        backgroundColor: '#162035',
+                        titleColor: '#a0b0c8',
+                        bodyColor: '#00c878',
+                        borderColor: '#00c878',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            // Titre du tooltip = la date
+                            title: items => `📅 ${items[0].label}`,
+                            // Corps du tooltip = le prix formaté
+                            label: item => ` Prix : ${item.parsed.y.toFixed(2)} $`
+                        }
+                    },
+                    // ── Plugin zoom/pan ──
+                    zoom: {
+                        pan: {
+                            enabled: true,   // Clic + glisser pour naviguer dans le temps
+                            mode: 'x'        // Uniquement horizontal (pas vertical)
+                        },
+                        zoom: {
+                            wheel: {
+                                enabled: true,    // Molette de la souris = zoom
+                                speed: 0.1        // Vitesse du zoom (0.1 = doux)
+                            },
+                            pinch: {
+                                enabled: true     // Pinch sur mobile = zoom
+                            },
+                            mode: 'x'             // Uniquement horizontal
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#a0b0c8',
+                            maxTicksLimit: 12,    // Maximum 12 étiquettes visibles sur l'axe X
+                            maxRotation: 0        // Texte horizontal (pas de rotation)
+                        },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    },
+                    y: {
+                        ticks: {
+                            color: '#a0b0c8',
+                            // Formate les valeurs Y avec le symbole $
+                            callback: val => val.toLocaleString('fr-FR') + ' $'
+                        },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    }
                 }
             }
+        });
+
+        
+        // FILTRE PAR PÉRIODE
+        // Garde seulement les données des N derniers jours
+        
+        function filtrerPeriode(jours, bouton) {
+            // 1. Met à jour le style des boutons (enlève .actif de tous, ajoute au cliqué)
+            document.querySelectorAll('.periode-btn').forEach(b => b.classList.remove('actif'));
+            bouton.classList.add('actif');
+
+            // 2. Calcule la date de début (aujourd'hui - N jours)
+            const dateDebut = new Date();
+            dateDebut.setDate(dateDebut.getDate() - jours);
+
+            // 3. Filtre les données : garde seulement celles >= dateDebut
+            const filtered = toutesLesDonnees.labels.reduce((acc, label, i) => {
+                // Convertit le format "dd/MM/yyyy" en objet Date JavaScript
+                const parts = label.split('/');
+                const date = new Date(parts[2], parts[1] - 1, parts[0]);
+
+                if (date >= dateDebut) {
+                    acc.labels.push(label);
+                    acc.prix.push(toutesLesDonnees.prix[i]);
+                }
+                return acc;
+            }, { labels: [], prix: [] });
+
+            // 4. Met à jour le graphique avec les données filtrées
+            chart.data.labels = filtered.labels;
+            chart.data.datasets[0].data = filtered.prix;
+            chart.resetZoom();  // Reset le zoom avant d'appliquer la nouvelle période
+            chart.update();
         }
-    });
-</script>
+
+        
+        // TOUT AFFICHER
+        // Remet toutes les données originales
+       
+        function toutAfficher(bouton) {
+            document.querySelectorAll('.periode-btn').forEach(b => b.classList.remove('actif'));
+            bouton.classList.add('actif');
+
+            // Remet les données complètes
+            chart.data.labels = toutesLesDonnees.labels;
+            chart.data.datasets[0].data = toutesLesDonnees.prix;
+            chart.resetZoom();
+            chart.update();
+        }
+    </script>
 }

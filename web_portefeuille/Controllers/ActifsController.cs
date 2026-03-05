@@ -56,7 +56,7 @@ namespace web_portefeuille.Controllers
 
                 // Appel 2 : récupère l'historique des prix
                 var responseDonnees = await _httpClient
-                    .GetAsync($"{_apiUrl}/donneeboursieres/actif/{id}?limit=30");
+                    .GetAsync($"{_apiUrl}/donneeboursieres/actif/{id}?limit=10000");
 
                 List<Donneeboursiere> donnees = new();
                 if (responseDonnees.IsSuccessStatusCode)

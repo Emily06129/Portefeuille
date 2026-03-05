@@ -1,125 +1,147 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NodaTime;
 using Portefeuille.Data;
-using Portefeuille.Models;              
-using YahooFinanceApi;                  // La librairie Yahoo Finance
-
+using Portefeuille.Models;
+using YahooQuotesApi;
 
 namespace Portefeuille.Services
 {
     public class YahooFinanceService
     {
-        private PortefeuilleContext _context;
-        private ILogger<YahooFinanceService> _logger;
+        private readonly PortefeuilleContext _context;
+        private readonly ILogger<YahooFinanceService> _logger;
 
         public YahooFinanceService(PortefeuilleContext context,
-                            ILogger<YahooFinanceService> logger)
+                                   ILogger<YahooFinanceService> logger)
         {
             _context = context;
             _logger = logger;
         }
 
-        public async Task<List<Donneeboursiere>> FetchHistoricalDataAsync(int actifId)
-        {
-            //  1. On cherche l'actif dans ta BDD 
-            // FindAsync cherche par clé primaire (Id)
-            var actif = await _context.Actif.FindAsync(actifId);
-
-            if (actif == null || string.IsNullOrWhiteSpace(actif.Symbole))
-            {
-                _logger.LogWarning("Actif invalide ou symbole manquant.");
-                return null;
-            }
-
-            // Si l'actif n'a pas de Symbole renseigné → on arrête
-            // Ex: si Symbole est null ou vide "", Yahoo ne sait pas quoi chercher
-            if (string.IsNullOrWhiteSpace(actif.Symbole))
-            {
-                _logger.LogWarning(" Actif '{Nom}' n'a pas de Symbole (ex: AAPL).", actif.Nom);
-                return null;
-            }
-
-            try
-            {
-                //  2. On appelle Yahoo Finance 
-                // Yahoo.Symbols() = on lui dit quel symbole on veut
-                // .Fields()       = on lui dit quels champs on veut
-                // .QueryAsync()   = on envoie la requête
-                var securities = await Yahoo.Symbols(actif.Symbole)
-                    .Fields(
-                        Field.RegularMarketPrice,   // Prix actuel (→ Cloture)
-                        Field.RegularMarketVolume   // Volume échangé (→ Volume)
-                    )
-                    .QueryAsync();
-
-                // Si Yahoo ne connaît pas ce symbole → on arrête
-                if (!securities.ContainsKey(actif.Symbole))
-                {
-                    _logger.LogWarning(" Symbole '{Symbole}' inconnu sur Yahoo.", actif.Symbole);
-                    return null;
-                }
-
-                // On récupère les données de notre symbole
-                var data = securities[actif.Symbole];
-
-                //  3. On construit la DonneeBoursiere 
-                
-                var donnee = new Donneeboursiere
-                {
-                    ActifId = actifId,                               // Lien vers l'actif
-                    Cloture = (float)data[Field.RegularMarketPrice], // Prix actuel
-                    Volume = (float)data[Field.RegularMarketVolume],// Volume
-                    Date = DateTime.UtcNow                        // Maintenant (heure UTC)
-                };
-
-                //  4. On sauvegarde en BDD 
-                // Add()             = prépare l'insertion
-                // SaveChangesAsync()= exécute le INSERT en SQL
-                _context.Donneeboursiere.Add(donnee);
-                await _context.SaveChangesAsync();
-
-                // Log de succès visible dans la console Visual Studio
-                _logger.LogInformation(
-                    " {Symbole} → Clôture: {Prix}$ | Volume: {Vol} | {Date}",
-                    actif.Symbole, donnee.Cloture, donnee.Volume, donnee.Date);
-
-                return donnee;
-            }
-            catch (Exception ex)
-            {
-                // Si Yahoo est indisponible ou réseau coupé
-                _logger.LogError(ex, " Erreur Yahoo pour '{Symbole}'", actif.Symbole);
-                return null;
-            }
-        }
-
+        // MÉTHODE PRINCIPALE
+        // Parcourt TOUS les actifs en BDD et récupère
+        // l'historique Yahoo pour chacun
         public async Task<List<Donneeboursiere>> FetchAllActifsAsync()
         {
-            // Récupère uniquement les actifs avec un Symbole renseigné
             var actifs = await _context.Actif
-                .Where(a => a.Symbole != null && a.Symbole != "")
+                .Where(a => !string.IsNullOrWhiteSpace(a.Symbole))
                 .ToListAsync();
 
-            _logger.LogInformation(" Récupération pour {Count} actif(s)...", actifs.Count);
+            _logger.LogInformation("Récupération historique pour {Count} actif(s)...", actifs.Count);
 
             var resultats = new List<Donneeboursiere>();
-
-            // Pour chaque actif, on appelle la méthode 1
+            //La boucle traite chaque actif un par un
             foreach (var actif in actifs)
             {
-                var donnee = await FetchAndSaveAsync(actif.Id);
+                var donnees = await FetchHistoricalDataAsync(actif);
 
-                if (donnee != null)
-                    resultats.Add(donnee);
+                if (donnees != null && donnees.Any())
+                    resultats.AddRange(donnees);
 
-                //  IMPORTANT : pause de 400ms entre chaque appel
-                // Yahoo Finance bloque si on fait trop d'appels trop vite
-                await Task.Delay(400);
+                await Task.Delay(500);
             }
 
-            _logger.LogInformation(" {Count} actif(s) mis à jour.", resultats.Count);
-
+            _logger.LogInformation("{Count} données sauvegardées au total.", resultats.Count);
             return resultats;
         }
 
+        // MÉTHODE SECONDAIRE
+        // Récupère 3 ans d'historique pour UN seul actif
+        // et sauvegarde les nouvelles données en BDD
+        private async Task<List<Donneeboursiere>> FetchHistoricalDataAsync(Actif actif)
+        {
+            try
+            {
+                //  on calcule la date UNE seule fois dans une variable
+             
+                var dateDebut = DateTime.UtcNow.AddYears(-3);
+
+                // ÉTAPE 1 : Crée le client Yahoo
+                // On réutilise dateDebut pour Year, Month et Day
+                var yahoo = new YahooQuotesBuilder()
+                    .WithHistoryStartDate(Instant.FromUtc(
+                        dateDebut.Year,    //  utilise la variable calculée une fois
+                        dateDebut.Month,   //  utilise la variable calculée une fois
+                        dateDebut.Day,     //  utilise la variable calculée une fois
+                        0, 0))
+                    .Build();
+
+                _logger.LogInformation("Yahoo historique : {Symbole}", actif.Symbole);
+
+                // ÉTAPE 2 : Appel Yahoo Finance
+                // GetHistoryAsync = méthode v7 pour récupérer l'historique
+                // Elle retourne un Result<History> :
+                //   → Result = enveloppe qui contient soit une valeur, soit une erreur
+                //   → History = l'objet qui contient tous les jours de bourse (Ticks)
+                Result<History> result = await yahoo.GetHistoryAsync(actif.Symbole!);
+
+                // Vérifie si Yahoo a retourné une erreur
+                if (result.HasError)
+                {
+                    _logger.LogWarning("Erreur pour {Symbole} : {Erreur}",
+                        actif.Symbole, result.Error);
+                    return new List<Donneeboursiere>();
+                }
+
+                // ÉTAPE 3 : Extrait les données
+                // history.Ticks = la liste des jours de bourse
+                // Chaque "Tick" = 1 jour = 1 ligne avec Date, Open, Close, Volume...
+                History history = result.Value;
+                var ticks = history.Ticks;
+
+                if (!ticks.Any())
+                {
+                    _logger.LogWarning("Aucune donnée reçue pour {Symbole}", actif.Symbole);
+                    return new List<Donneeboursiere>();
+                }
+
+                // ÉTAPE 4 : Anti-doublons
+                // Récupère toutes les dates déjà en BDD pour cet actif
+                var datesExistantes = await _context.Donneeboursiere
+                    .Where(d => d.ActifId == actif.Id)
+                    .Select(d => d.Date.Date)
+                    .ToListAsync();
+
+                // ÉTAPE 5 : Gestion du fuseau horaire
+                // Yahoo renvoie les dates dans le fuseau de la bourse
+                // ex: AAPL → "America/New_York", MC.PA → "Europe/Paris"
+                var tz = DateTimeZoneProviders.Tzdb
+                             .GetZoneOrNull(history.ExchangeTimezoneName)
+                         ?? DateTimeZone.Utc;
+
+                // ÉTAPE 6 : Conversion en Donneeboursiere
+                var nouvelles = ticks
+                    .Where(t => !datesExistantes.Contains(
+                        t.Date.InZone(tz).ToDateTimeUnspecified().Date))
+                    .Select(t => new Donneeboursiere
+                    {
+                        ActifId = actif.Id,
+                        Cloture = (float)t.Close,
+                        Volume = (float)t.Volume,
+                        Date = t.Date.InZone(tz).ToDateTimeUnspecified()
+                    })
+                    .ToList();
+
+                if (!nouvelles.Any())
+                {
+                    _logger.LogInformation("{Symbole} : déjà à jour.", actif.Symbole);
+                    return new List<Donneeboursiere>();
+                }
+
+                // ÉTAPE 7 : Sauvegarde en BDD
+                _context.Donneeboursiere.AddRange(nouvelles);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("{Symbole} : {Count} jours sauvegardés.",
+                    actif.Symbole, nouvelles.Count);
+
+                return nouvelles;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur Yahoo pour '{Symbole}'", actif.Symbole);
+                return new List<Donneeboursiere>();
+            }
+        }
     }
 }

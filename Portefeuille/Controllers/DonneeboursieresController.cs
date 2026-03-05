@@ -110,25 +110,24 @@ namespace Portefeuille.Controllers
             return _context.Donneeboursiere.Any(e => e.Id == id);
         }
     
-    // POST: api/Donneeboursieres/fetch/1
+        // POST: api/Donneeboursieres/fetch/{actifId}
         [HttpPost("fetch/{actifId}")]
         public async Task<IActionResult> FetchForActif(int actifId)
         {
-            var result = await _yahooService.FetchAndSaveAsync(actifId);
+            // Vérifie que l'actif existe
+            var actif = await _context.Actif.FindAsync(actifId);
+            if (actif == null)
+                return NotFound(new { message = $"Actif Id={actifId} introuvable." });
 
-            if (result == null)
-                return BadRequest(new
-                {
-                    message = "Échec. Vérifiez que l'actif existe et que son Symbole est valide."
-                });
+            // Appelle le service — il va chercher l'historique 3 ans pour tous
+            // les actifs mais on retourne juste le compte pour cet actif
+            var resultats = await _yahooService.FetchAllActifsAsync();
+            var count = resultats.Count(d => d.ActifId == actifId);
 
             return Ok(new
             {
-                message = "Données récupérées et sauvegardées !",
-                actifId = result.ActifId,
-                cloture = result.Cloture,
-                volume = result.Volume,
-                date = result.Date
+                message = $"Historique récupéré pour {actif.Nom}.",
+                donneesAjoutees = count
             });
         }
 

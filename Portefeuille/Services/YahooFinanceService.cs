@@ -18,16 +18,15 @@ namespace Portefeuille.Services
             _logger = logger;
         }
 
-        public async Task<Donneeboursiere?> FetchAndSaveAsync(int actifId)
+        public async Task<List<Donneeboursiere>> FetchHistoricalDataAsync(int actifId)
         {
             //  1. On cherche l'actif dans ta BDD 
             // FindAsync cherche par clé primaire (Id)
             var actif = await _context.Actif.FindAsync(actifId);
 
-            // Si l'actif n'existe pas → on arrête
-            if (actif == null)
+            if (actif == null || string.IsNullOrWhiteSpace(actif.Symbole))
             {
-                _logger.LogWarning(" Actif Id={Id} introuvable en BDD.", actifId);
+                _logger.LogWarning("Actif invalide ou symbole manquant.");
                 return null;
             }
 

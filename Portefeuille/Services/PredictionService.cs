@@ -20,7 +20,7 @@ namespace Portefeuille.Services
             var forecastingPipeline = mlContext.Forecasting.ForecastBySsa(
             outputColumnName: "ForecastedPrices",
             inputColumnName: "Cloture",
-            windowSize: 7, // Chaque echantillon est analysé par semaine
+            windowSize: 7, // Chaque echantillon est analysé tous les 7 jours
             seriesLength: 30, // Nombre d'echantillons de données utilisés pour entraîner le modèle
             horizon: nbJours,
             trainSize: historique.Count

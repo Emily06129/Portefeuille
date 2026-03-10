@@ -4,7 +4,7 @@ namespace Portefeuille.Models
 {
     public class DonneesPredites
     {
-        [VectorType(7)]
+        [VectorType(30)]
         public float[] ForecastedPrices { get; set; }
     }
 }

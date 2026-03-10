@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Elfie.Serialization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
@@ -144,7 +145,7 @@ namespace Portefeuille.Controllers
             });
         }
 
-        // GET: api/Donneeboursieres/actif/1
+        // GET: api/Donneeboursieres/actif/
         [HttpGet("actif/{actifId}")]
         public async Task<IActionResult> GetByActif(int actifId, [FromQuery] int limit = 100)
         {
@@ -158,22 +159,48 @@ namespace Portefeuille.Controllers
         }
 
 
-[HttpGet("predict/{actifId}")]
-        public async Task<IActionResult> PredictPrices(int actifId)
+        [HttpPost("~/api/prediction/tous")]
+        public async Task<IActionResult> PredireTousActifs()
         {
-            var historique = await _context.Donneeboursiere
-                .Where(d => d.ActifId == actifId)
-                .OrderBy(d => d.Date)
-                .ToListAsync();
-
-            if (historique.Count < 30)
-                return BadRequest("Pas assez de données (minimum 30 jours).");
+            // Instancie le service de prédiction ML.NET
 
             var predictionService = new PredictionService();
-            var predictions = predictionService.ForecastPrices(historique);
 
-            return Ok(predictions);
+            // Dictionnaire pour stocker les résultats : Symbole - prix prédits
+
+            var resultats = new Dictionary<string, float[]>();
+
+            // Récupère tous les actifs depuis la base de données
+
+            var actifs = await _context.Actif.ToListAsync();
+
+            // Récupère l'historique des prix de chaque actif, trié par date croissante
+
+            foreach (var actif in actifs)
+            {
+                var historique = await _context.Donneeboursiere
+                    .Where(d => d.ActifId == actif.Id)
+                    .OrderBy(d => d.Date)
+                    .ToListAsync();
+
+                if (historique.Count < 30)
+                    continue;
+
+                // Prédit les prix pour les 30 prochains jours via ML.NET SSA
+
+                var predictions = predictionService.ForecastPrices(historique, nbJours: 30);
+
+                // Stocke les prédictions avec le symbole de l'actif comme clé
+
+                resultats[actif.Symbole] = predictions;
+            }
+
+            //on retourne tout 
+
+            return Ok(resultats);
         }
+
+  
     }
 
 

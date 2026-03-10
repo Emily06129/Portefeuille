@@ -156,5 +156,26 @@ namespace Portefeuille.Controllers
 
             return Ok(donnees);
         }
+
+
+[HttpGet("predict/{actifId}")]
+        public async Task<IActionResult> PredictPrices(int actifId)
+        {
+            var historique = await _context.Donneeboursiere
+                .Where(d => d.ActifId == actifId)
+                .OrderBy(d => d.Date)
+                .ToListAsync();
+
+            if (historique.Count < 30)
+                return BadRequest("Pas assez de données (minimum 30 jours).");
+
+            var predictionService = new PredictionService();
+            var predictions = predictionService.ForecastPrices(historique);
+
+            return Ok(predictions);
+        }
     }
+
+
+
 }

@@ -1,4 +1,9 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using web_portefeuille.Data;
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<web_portefeuilleContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("web_portefeuilleContext") ?? throw new InvalidOperationException("Connection string 'web_portefeuilleContext' not found.")));
 
 builder.Services.AddHttpClient();
 builder.Services.AddSession();

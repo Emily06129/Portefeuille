@@ -1,0 +1,282 @@
+﻿@{
+}
+@model web_portefeuille.Models.InvestirViewModel
+<style>
+    body {
+        background-color: #1a2744;
+        color: white;
+    }
+
+    .form-container {
+        max-width: 550px;
+        margin: 60px auto;
+        background-color: #243558;
+        padding: 40px;
+        border-radius: 16px;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 20px;
+    }
+
+        .field label {
+            font-size: 0.9rem;
+            color: #a0b0c8;
+            margin-bottom: 6px;
+        }
+
+        .field input {
+            background-color: #1a2744;
+            border: 1px solid #3a5070;
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: white;
+            font-size: 0.95rem;
+        }
+
+    /* Checkboxes actifs */
+    .actifs-group {
+        background-color: #1a2744;
+        border: 1px solid #3a5070;
+        border-radius: 8px;
+        padding: 14px;
+        max-height: 280px;
+        overflow-y: auto;
+    }
+
+        .actifs-group .group-label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #00c878;
+            margin: 10px 0 6px;
+            text-transform: uppercase;
+        }
+
+    .actif-item {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 4px;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-bottom: 2px;
+    }
+
+        .actif-item:hover {
+            background-color: #2e4468;
+        }
+
+        .actif-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #00c878;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .actif-item label {
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin: 0;
+        }
+
+    /* Tags actifs sélectionnés */
+    #selected-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-height: 36px;
+        margin-top: 10px;
+    }
+
+    .tag {
+        background-color: #00c87820;
+        border: 1px solid #00c878;
+        color: #00c878;
+        border-radius: 20px;
+        padding: 3px 12px;
+        font-size: 0.82rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+        .tag span {
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+            .tag span:hover {
+                color: white;
+            }
+
+    /* Bouton */
+    .btn-invest {
+        width: 100%;
+        padding: 13px;
+        background-color: #00c878;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: background-color 0.2s;
+    }
+
+        .btn-invest:hover {
+            background-color: #00a862;
+        }
+
+        .btn-invest:disabled {
+            background-color: #3a5070;
+            cursor: not-allowed;
+        }
+
+    /* Compteur */
+    .counter {
+        font-size: 0.8rem;
+        color: #a0b0c8;
+        text-align: right;
+        margin-top: 6px;
+    }
+
+        .counter.warn {
+            color: #ff6b6b;
+        }
+
+    .navbar {
+        background-color: #1a2744 !important;
+    }
+
+        .navbar a {
+            color: white !important;
+        }
+
+    .error-msg {
+        color: #ff6b6b;
+        text-align: center;
+        margin-top: 12px;
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="form-container">
+    <h2>💰 Investir</h2>
+
+    <form asp-action="Invest" method="post" id="invest-form">
+
+        Budget
+        <div class="field">
+            <label>Budget (€)</label>
+            <input asp-for="Budget" type="number" min="1" placeholder="Ex : 5000" />
+        </div>
+
+        Sélection des actifs
+        <div class="field">
+            <label>Sélectionner vos actifs <span style="color:#a0b0c8">(2 minimum)</span></label>
+
+            <div class="actifs-group">
+                <div class="group-label">📈 Actions</div>
+                @foreach (var actif in new[] {
+                                ("AAPL","Apple"),("MSFT","Microsoft"),("TSLA","Tesla"),
+                                ("AMZN","Amazon"),("GOOGL","Google"),("NVDA","NVIDIA"),
+                                ("MC.PA","LVMH"),("TTE.PA","TotalEnergies"),
+                                ("BNP.PA","BNP Paribas"),("AIR.PA","Airbus")
+                                })
+                {
+                    <div class="actif-item">
+                        <input type="checkbox" name="SymbolesActifs" value="@actif.Item1"
+                               id="chk_@actif.Item1" onchange="updateTags()" />
+                        <label for="chk_@actif.Item1">@actif.Item2 (@actif.Item1)</label>
+                    </div>
+                }
+
+                <div class="group-label" style="margin-top:14px">🪙 Cryptos</div>
+                @foreach (var actif in new[] {
+                                ("BTC-USD","Bitcoin"),("ETH-USD","Ethereum"),("BNB-USD","BNB"),
+                                ("SOL-USD","Solana"),("XRP-USD","XRP"),("ADA-USD","Cardano"),
+                                ("AVAX-USD","Avalanche"),("DOGE-USD","Dogecoin"),
+                                ("DOT-USD","Polkadot"),("LINK-USD","Chainlink")
+                                })
+                {
+                    <div class="actif-item">
+                        <input type="checkbox" name="SymbolesActifs" value="@actif.Item1"
+                               id="chk_@actif.Item1" onchange="updateTags()" />
+                        <label for="chk_@actif.Item1">@actif.Item2 (@actif.Item1)</label>
+                    </div>
+                }
+            </div>
+
+            Tags des actifs sélectionnés
+            <div id="selected-tags"></div>
+            <div class="counter" id="counter">0 actif sélectionné</div>
+        </div>
+
+
+        <button type="submit" class="btn-invest" id="btn-submit" disabled>
+            Lancer l'optimisation
+        </button>
+    </form>
+
+    @if (ViewBag.Error != null)
+    {
+        <p class="error-msg">⚠️ @ViewBag.Error</p>
+    }
+</div>
+
+<script>
+        // Appelée à chaque fois qu'une checkbox est cochée/décochée
+
+    function updateTags() {
+                // Récupère toutes les checkboxes cochées du groupe SymbolesActifs
+
+        const checkboxes = document.querySelectorAll('input[name="SymbolesActifs"]:checked');
+        const tagsContainer = document.getElementById('selected-tags');
+        const counter = document.getElementById('counter');
+        const btn = document.getElementById('btn-submit');
+
+        // Mise à jour des tags
+                // Reconstruit la liste des tags à partir des checkboxes cochées
+
+        tagsContainer.innerHTML = '';
+        checkboxes.forEach(chk => {
+                        // Récupère le texte du label associé (ex: "Apple (AAPL)")
+
+            const label = document.querySelector(`label[for="${chk.id}"]`).textContent;
+            const tag = document.createElement('div');
+            tag.className = 'tag';
+            tag.innerHTML = `${label} <span onclick="removeActif('${chk.id}')">✕</span>`;
+            tagsContainer.appendChild(tag);
+        });
+
+        // Compteur
+                // Met à jour le compteur avec accord grammatical
+
+        const n = checkboxes.length;
+        counter.textContent = `${n} actif${n > 1 ? 's' : ''} sélectionné${n > 1 ? 's' : ''}`;
+                // Passe en rouge si exactement 1 actif (insuffisant)
+
+        counter.className = n === 1 ? 'counter warn' : 'counter';
+
+        // Active le bouton uniquement si au moins 2 actifs sont cochés
+        btn.disabled = n < 2;
+    }
+        // Décoche la checkbox correspondante et rafraîchit les tags
+
+    function removeActif(id) {
+        document.getElementById(id).checked = false;
+        updateTags();
+    }
+</script>

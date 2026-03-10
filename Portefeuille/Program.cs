@@ -2,6 +2,8 @@
 using Portefeuille.Data;
 using Portefeuille.Services;
 using Portefeuille.Models;
+using Microsoft.ML;
+
 
 var builder = WebApplication.CreateBuilder(args);
 

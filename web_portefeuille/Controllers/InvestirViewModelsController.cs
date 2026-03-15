@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using web_portefeuille.Models;
 
 namespace web_portefeuille.Controllers
@@ -8,7 +9,12 @@ namespace web_portefeuille.Controllers
         // GET : /Investir/Invest
         public IActionResult Invest()
         {
-            return View(new InvestirViewModel());
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UtilisateurConnecte")))
+            {
+                return RedirectToAction("Login", "Account", new { returnUrl = "/Investir/Invest" });
+            }
+
+            return View();
         }
 
         // POST : /Investir/Invest

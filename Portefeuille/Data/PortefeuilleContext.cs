@@ -16,6 +16,7 @@ namespace Portefeuille.Data
         public DbSet<Portefeuille.Models.Client> Client { get; set; } = default!;
         public DbSet<Portefeuille.Models.Allocation> Allocation { get; set; } = default!;
         public DbSet<Portefeuille.Models.Portfolio_client> Portfolio_client { get; set; } = default!;
-       
+        public DbSet<DonneesPredites> DonneesPredites { get; set; }
+
     }
 }

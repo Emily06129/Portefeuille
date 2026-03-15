@@ -31,10 +31,9 @@ namespace Portefeuille.Services
             var model = forecastingPipeline.Fit(dataView);
 
             // Prédiction des prix futurs
-            var forecastingEngine = model.CreateTimeSeriesEngine<Donneeboursiere, DonneesPredites>(mlContext);
+            var forecastingEngine = model.CreateTimeSeriesEngine<Donneeboursiere, PredictionOutput>(mlContext);
             var forecast = forecastingEngine.Predict();
-
-            return forecast.ForecastedPrices;
+            return forecast.ForecastedPrices; //  retourne le tableau
         }
     }
 }

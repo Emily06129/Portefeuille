@@ -175,9 +175,10 @@ namespace Portefeuille.Controllers
             var actifs = await _context.Actif.ToListAsync();
 
             // Récupère l'historique des prix de chaque actif, trié par date croissante
-
+            //La boucle foreach parcourt chaque actif, prédit ses 30 prochains prix via ML.NET et les stocke en base — une ligne par jour prédit, liée à son actif via ActifId.
             foreach (var actif in actifs)
             {
+                // récupération des données historiques pour chaque actif
                 var historique = await _context.Donneeboursiere
                     .Where(d => d.ActifId == actif.Id)
                     .OrderBy(d => d.Date)
@@ -190,14 +191,36 @@ namespace Portefeuille.Controllers
 
                 var predictions = predictionService.ForecastPrices(historique, nbJours: 30);
 
-                // Stocke les prédictions avec le symbole de l'actif comme clé
+                // Stocke les prédictions avec le symbole de l'actif comme clé ( ce qu'on voit sur postman lorsqu'on post)
 
                 resultats[actif.Symbole] = predictions;
+
+                //  Sauvegarde des info sur les prédictions dans la base de données
+                for (int i = 0; i < predictions.Length; i++)
+                {
+                    _context.DonneesPredites.Add(new DonneesPredites
+                    {
+                        ActifId = actif.Id,
+                        Symbole = actif.Symbole,
+                        DatePrediction = DateTime.Now.AddDays(i + 1),
+                        PrixPredit = predictions[i]
+                    });
+                }
             }
 
-            //on retourne tout 
+            await _context.SaveChangesAsync();
 
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
             return Ok(resultats);
+
+
         }
 
   

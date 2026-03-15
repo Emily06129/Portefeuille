@@ -1,0 +1,80 @@
+﻿@{
+    var budget = ViewBag.Budget;
+    var actifs = ViewBag.Actifs as List<string>;
+}
+
+<style>
+    body {
+        background-color: #1a2744;
+        color: white;
+    }
+
+    .page-titre {
+        text-align: center;
+        padding: 50px 20px 20px;
+    }
+
+        .page-titre h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .page-titre p {
+            color: #a0b0c8;
+            font-size: 1rem;
+        }
+
+    .grille-actifs {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        padding: 20px 40px 60px;
+    }
+
+    .carte-actif {
+        background-color: #243558;
+        border-radius: 12px;
+        padding: 24px;
+        color: white;
+        border: 1px solid transparent;
+        transition: all 0.3s;
+    }
+
+        .carte-actif:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 200, 120, 0.15);
+            border-color: #00c878;
+        }
+
+    .sym {
+        color: #00c878;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    .budget-info {
+        text-align: center;
+        padding: 20px;
+        font-size: 1.2rem;
+        color: #a0b0c8;
+    }
+</style>
+
+<div class="page-titre">
+    <h1>📊 Résultats</h1>
+    <p> Cliquez sur l'actif pour suivre son évolution'</p>
+    <p>Budget : <strong style="color:#00c878">@budget €</strong></p>
+</div>
+
+<div class="grille-actifs">
+    @if (actifs != null)
+    {
+        @foreach (var actif in actifs)
+        {
+            <a asp-action="Evolution" asp-route-symbole="@actif" class="carte-actif" style="text-decoration:none; display:block;">
+                <h3>@actif</h3>
+                <div class="sym">@actif</div>
+            </a>
+        }
+    }
+</div>

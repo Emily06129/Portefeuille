@@ -1,0 +1,76 @@
+﻿@{
+    var symbole = ViewBag.Symbole;
+    var dates = ViewBag.Dates as List<string>;
+    var prix = ViewBag.Prix as List<float>;
+}
+
+<style>
+    body {
+        background-color: #1a2744;
+        color: white;
+    }
+
+    .graphe-container {
+        max-width: 900px;
+        margin: 60px auto;
+        background-color: #243558;
+        padding: 40px;
+        border-radius: 16px;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .btn-retour {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #00c878;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+        .btn-retour:hover {
+            color: white;
+        }
+</style>
+
+<div class="graphe-container">
+    <a class="btn-retour" asp-action="Resultats">← Retour aux résultats</a>
+    <h2>📈 Prix prédits — @symbole</h2>
+    <canvas id="monGraphe"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(dates));
+    const data = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(prix));
+
+    new Chart(document.getElementById('monGraphe'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '@symbole — Prix prédit',
+                data: data,
+                borderColor: '#00c878',
+                backgroundColor: 'rgba(0, 200, 120, 0.1)',
+                borderWidth: 2,
+                pointRadius: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { labels: { color: 'white' } }
+            },
+            scales: {
+                x: { ticks: { color: '#a0b0c8' }, grid: { color: '#2e4468' } },
+                y: { ticks: { color: '#a0b0c8' }, grid: { color: '#2e4468' } }
+            }
+        }
+    });
+</script>

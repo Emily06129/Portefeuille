@@ -223,7 +223,19 @@ namespace Portefeuille.Controllers
 
         }
 
-  
+
+        // GET: api/DonneesPredites/{symbole} Récupération pour faire le graphe
+        [HttpGet("~/api/DonneesPredites/{symbole}")]
+        public async Task<IActionResult> GetPredictions(string symbole)
+        {
+            var donnees = await _context.DonneesPredites
+                .Where(d => d.Symbole == symbole)
+                .OrderBy(d => d.DatePrediction)
+                .ToListAsync();
+
+            return Ok(donnees);
+        }
+
     }
 
 

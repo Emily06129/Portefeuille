@@ -1,79 +1,313 @@
 ﻿@{
     var budget = ViewBag.Budget;
     var actifs = ViewBag.Actifs as List<string>;
+    var portefeuilles = ViewBag.Portefeuilles as List<web_portefeuille.Models.PortfolioOptimise>;
 }
 
 <style>
     body {
         background-color: #1a2744;
         color: white;
+        font-family: Arial, sans-serif;
     }
 
     .page-titre {
         text-align: center;
-        padding: 50px 20px 20px;
+        padding: 40px 20px 20px;
     }
 
         .page-titre h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            font-size: 2.2rem;
+            margin-bottom: 8px;
         }
 
         .page-titre p {
             color: #a0b0c8;
         }
 
-    .grille-actifs {
+    /* Grille des 5 portefeuilles */
+    .grille-portfolios {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
-        padding: 20px 40px 60px;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+        padding: 30px 40px 60px;
+        max-width: 1400px;
+        margin: 0 auto;
     }
 
-    .carte-actif {
+    .carte-portfolio {
         background-color: #243558;
-        border-radius: 12px;
-        padding: 24px;
-        color: white;
-        border: 1px solid transparent;
+        border-radius: 14px;
+        padding: 26px;
+        border: 1px solid #3a5070;
         transition: all 0.3s;
     }
 
-        .carte-actif:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 200, 120, 0.15);
+        .carte-portfolio:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0,200,120,0.15);
             border-color: #00c878;
         }
 
-    .sym {
+    /* Badge niveau de risque */
+    .badge-risque {
+        display: inline-block;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin-bottom: 16px;
+    }
+
+    .badge-Défensif {
+        background: #1a3a2a;
         color: #00c878;
-        font-size: 0.9rem;
+        border: 1px solid #00c878;
+    }
+
+    .badge-Conservateur {
+        background: #1a2e3a;
+        color: #00b4d8;
+        border: 1px solid #00b4d8;
+    }
+
+    .badge-Équilibré {
+        background: #2a2a1a;
+        color: #f4d03f;
+        border: 1px solid #f4d03f;
+    }
+
+    .badge-Dynamique {
+        background: #2e1a1a;
+        color: #ff9f43;
+        border: 1px solid #ff9f43;
+    }
+
+    .badge-Agressif {
+        background: #3a1a1a;
+        color: #ff6b6b;
+        border: 1px solid #ff6b6b;
+    }
+
+    /* Métriques */
+    .metriques {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 16px 0;
+    }
+
+    .metrique {
+        background-color: #1a2744;
+        border-radius: 8px;
+        padding: 10px 12px;
+        text-align: center;
+    }
+
+        .metrique .val {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #00c878;
+        }
+
+        .metrique .lbl {
+            font-size: 0.72rem;
+            color: #a0b0c8;
+            margin-top: 3px;
+        }
+
+    /* Barre de poids */
+    .section-poids {
+        margin-top: 18px;
+    }
+
+        .section-poids h4 {
+            font-size: 0.85rem;
+            color: #a0b0c8;
+            margin-bottom: 10px;
+        }
+
+    .poids-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 7px;
+        font-size: 0.85rem;
+    }
+
+        .poids-item .sym {
+            width: 90px;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+    .barre-container {
+        flex: 1;
+        background: #1a2744;
+        border-radius: 4px;
+        height: 8px;
+    }
+
+    .barre-fill {
+        height: 8px;
+        border-radius: 4px;
+        background: #00c878;
+    }
+
+    .poids-item .pct {
+        width: 42px;
+        text-align: right;
+        color: #00c878;
         font-weight: bold;
     }
 
-    .budget-info {
-        text-align: center;
-        padding: 20px;
-        font-size: 1.2rem;
+    /* Montant investi */
+    .montant {
+        margin-top: 16px;
+        padding: 12px;
+        background: #1a2744;
+        border-radius: 8px;
+        font-size: 0.85rem;
         color: #a0b0c8;
+        border-left: 3px solid #00c878;
+    }
+
+        .montant span {
+            color: white;
+            font-weight: bold;
+        }
+
+    /* Actifs cliquables */
+    .actifs-links {
+        margin-top: 16px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .actif-tag {
+        background: #1a2744;
+        border: 1px solid #3a5070;
+        border-radius: 16px;
+        padding: 3px 12px;
+        font-size: 0.78rem;
+        color: #a0b0c8;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+        .actif-tag:hover {
+            border-color: #00c878;
+            color: #00c878;
+        }
+
+    .error-box {
+        background: #3a1a1a;
+        border: 1px solid #ff6b6b;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        color: #ff6b6b;
+        margin: 40px auto;
+        max-width: 600px;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 60px;
+        color: #a0b0c8;
+        font-size: 1.1rem;
     }
 </style>
 
 <div class="page-titre">
-    <h1>📊 Résultats</h1>
-    <p> Cliquez sur l'actif pour suivre son évolution'</p>
-    <p>Budget : <strong style="color:#00c878">@budget €</strong></p>
+    <h1>📊 Portefeuilles Optimisés</h1>
+    <p>
+        Budget : <strong style="color:#00c878">@budget €</strong>
+        &nbsp;|&nbsp; @(actifs?.Count ?? 0) actifs sélectionnés
+    </p>
 </div>
 
-<div class="grille-actifs">
-    @if (actifs != null)
-    {
-        @foreach (var actif in actifs)
+@if (ViewBag.Error != null)
+{
+    <div class="error-box">⚠️ @ViewBag.Error</div>
+}
+else if (portefeuilles == null)
+{
+    <div class="loading">⏳ Calcul en cours...</div>
+}
+else
+{
+    <div class="grille-portfolios">
+        @foreach (var p in portefeuilles)
         {
-            <a asp-action="Evolution" asp-route-symbole="@actif" class="carte-actif" style="text-decoration:none; display:block;">
-                <h3>@actif</h3>
-                <div class="sym">@actif</div>
-            </a>
+            float budgetVal = float.TryParse(budget?.ToString(), out float b) ? b : 0f;
+
+            <div class="carte-portfolio">
+
+                <!-- Badge niveau de risque -->
+                <div class="badge-risque badge-@p.NiveauRisque">@p.NiveauRisque</div>
+
+                <!-- Métriques -->
+                <div class="metriques">
+                    <div class="metrique">
+                        <div class="val">@p.RendementAttendu %</div>
+                        <div class="lbl">Rendement prédit</div>
+                    </div>
+                    <div class="metrique">
+                        <div class="val">@p.Volatilite %</div>
+                        <div class="lbl">Volatilité</div>
+                    </div>
+                    <div class="metrique">
+                        <div class="val">@p.SharpeRatio</div>
+                        <div class="lbl">Sharpe Ratio</div>
+                    </div>
+                    <div class="metrique">
+                        <div class="val" style="color:#ff9f43">@p.VaR95 %</div>
+                        <div class="lbl">VaR 95%</div>
+                    </div>
+                </div>
+
+                <!-- Barres de poids -->
+                <div class="section-poids">
+                    <h4>ALLOCATION</h4>
+                    @foreach (var kv in p.Poids.OrderByDescending(x => x.Value))
+                    {
+                        var pct = Math.Round(kv.Value * 100, 1);
+                        var montantActif = Math.Round(budgetVal * kv.Value, 2);
+                        <div class="poids-item">
+                            <span class="sym">@kv.Key</span>
+                            <div class="barre-container">
+                                <div class="barre-fill" style="width:@(pct)%"></div>
+                            </div>
+                            <span class="pct">@pct%</span>
+                        </div>
+                    }
+                </div>
+
+                <!-- Montant par actif -->
+                <div class="montant">
+                    💰 Actif dominant :
+                    @{
+                        var top = p.Poids.MaxBy(x => x.Value);
+                        var montantTop = Math.Round(budgetVal * top.Value, 2);
+                    }
+                    <span>@top.Key</span> → <span>@montantTop €</span>
+                </div>
+
+                <!-- Liens évolution -->
+                <div class="actifs-links">
+                    @foreach (var sym in p.Poids.Keys)
+                    {
+                        <a asp-controller="Investir"
+                           asp-action="Evolution"
+                           asp-route-symbole="@sym"
+                           class="actif-tag">📈 @sym</a>
+                    }
+                </div>
+
+            </div>
         }
-    }
-</div>
+    </div>
+}

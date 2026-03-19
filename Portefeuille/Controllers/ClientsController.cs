@@ -36,7 +36,7 @@ namespace Portefeuille.Controllers
 
                    .Include("ListePortfolio_Client.ListeActifs")
                    .Include("ListePortfolio_Client.ListeActifs.ListeDonneeBoursieres")
-                   .Include("ListePortfolio_Client.ListeActifs.ListeAllocations")
+               
              .FirstOrDefaultAsync(c=> c.Id == id);
 
             if (client == null)

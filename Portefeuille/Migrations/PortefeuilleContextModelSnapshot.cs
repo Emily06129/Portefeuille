@@ -48,36 +48,7 @@ namespace Portefeuille.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Portfolio_clientId");
-
                     b.ToTable("Actif");
-                });
-
-            modelBuilder.Entity("Portefeuille.Models.Allocation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ActifId")
-                        .HasColumnType("int");
-
-                    b.Property<float>("Montant")
-                        .HasColumnType("real");
-
-                    b.Property<float>("Poids")
-                        .HasColumnType("real");
-
-                    b.Property<float>("Prixpredit")
-                        .HasColumnType("real");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ActifId");
-
-                    b.ToTable("Allocation");
                 });
 
             modelBuilder.Entity("Portefeuille.Models.Client", b =>
@@ -169,44 +140,43 @@ namespace Portefeuille.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<double>("Budget")
+                        .HasColumnType("float");
+
+                    b.Property<double>("CVaR95")
+                        .HasColumnType("float");
+
                     b.Property<int>("ClientId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("DateCreation")
                         .HasColumnType("datetime2");
 
-                    b.Property<float>("RendementPrevu")
-                        .HasColumnType("real");
+                    b.Property<string>("NiveauRisque")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<float>("RisqueVolatilite")
-                        .HasColumnType("real");
+                    b.Property<string>("PoidsJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<float>("ScoreSharp")
-                        .HasColumnType("real");
+                    b.Property<double>("RendementPrevu")
+                        .HasColumnType("float");
+
+                    b.Property<double>("RisqueVolatilite")
+                        .HasColumnType("float");
+
+                    b.Property<double>("ScoreSharp")
+                        .HasColumnType("float");
+
+                    b.Property<double>("VaR95")
+                        .HasColumnType("float");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ClientId");
 
                     b.ToTable("Portfolio_client");
-                });
-
-            modelBuilder.Entity("Portefeuille.Models.Actif", b =>
-                {
-                    b.HasOne("Portefeuille.Models.Portfolio_client", null)
-                        .WithMany("ListeActifs")
-                        .HasForeignKey("Portfolio_clientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Portefeuille.Models.Allocation", b =>
-                {
-                    b.HasOne("Portefeuille.Models.Actif", null)
-                        .WithMany("ListeAllocations")
-                        .HasForeignKey("ActifId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Portefeuille.Models.Donneeboursiere", b =>
@@ -220,28 +190,23 @@ namespace Portefeuille.Migrations
 
             modelBuilder.Entity("Portefeuille.Models.Portfolio_client", b =>
                 {
-                    b.HasOne("Portefeuille.Models.Client", null)
+                    b.HasOne("Portefeuille.Models.Client", "Client")
                         .WithMany("ListePortfolio_Client")
                         .HasForeignKey("ClientId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Client");
                 });
 
             modelBuilder.Entity("Portefeuille.Models.Actif", b =>
                 {
-                    b.Navigation("ListeAllocations");
-
                     b.Navigation("ListeDonneeBoursieres");
                 });
 
             modelBuilder.Entity("Portefeuille.Models.Client", b =>
                 {
                     b.Navigation("ListePortfolio_Client");
-                });
-
-            modelBuilder.Entity("Portefeuille.Models.Portfolio_client", b =>
-                {
-                    b.Navigation("ListeActifs");
                 });
 #pragma warning restore 612, 618
         }

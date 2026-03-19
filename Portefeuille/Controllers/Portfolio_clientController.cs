@@ -34,7 +34,7 @@ namespace Portefeuille.Controllers
         {
             var portfolio_client = await _context.Portfolio_client.Include("ListeActifs")
                .Include("ListeActifs.ListeDonneeBoursieres")
-               .Include("ListeActifs.ListeAllocations")
+               
                .FirstOrDefaultAsync(p => p.Id == id);
             if (portfolio_client == null)
             {
@@ -105,6 +105,30 @@ namespace Portefeuille.Controllers
         private bool Portfolio_clientExists(int id)
         {
             return _context.Portfolio_client.Any(e => e.Id == id);
+        }
+
+        // POST: api/Portfolio_client/sauvegarder
+        [HttpPost("sauvegarder")]
+        public async Task<IActionResult> Sauvegarder([FromBody] SauvegarderPortfolioDto dto)
+        {
+            var portfolio = new Portfolio_client
+            {
+                NiveauRisque = dto.NiveauRisque,
+                ScoreSharp = dto.SharpeRatio,
+                RendementPrevu = dto.RendementAttendu,
+                RisqueVolatilite = dto.Volatilite,
+                VaR95 = dto.VaR95,
+                CVaR95 = dto.CVaR95,
+                Budget = dto.Budget,
+                PoidsJson = System.Text.Json.JsonSerializer.Serialize(dto.Poids),
+                DateCreation = DateTime.UtcNow,
+                ClientId = dto.ClientId
+            };
+
+            _context.Portfolio_client.Add(portfolio);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Portfolio sauvegardé.", id = portfolio.Id });
         }
     }
 }

@@ -236,6 +236,49 @@ namespace Portefeuille.Controllers
             return Ok(donnees);
         }
 
+        // POST: api/Donneeboursieres/optimiser
+        [HttpPost("optimiser")]
+        public async Task<IActionResult> Optimiser([FromBody] List<string> symboles)
+        {
+            if (symboles == null || symboles.Count < 2)
+                return BadRequest("Minimum 2 actifs requis.");
+
+            // 1. Récupérer les actifs depuis la BDD
+            var actifs = await _context.Actif
+                .Where(a => symboles.Contains(a.Symbole))
+                .ToListAsync();
+
+            if (actifs.Count < 2)
+                return BadRequest("Actifs introuvables en base.");
+
+            // 2. Récupérer l'historique de chaque actif
+            var historiques = new Dictionary<string, List<Donneeboursiere>>();
+            foreach (var actif in actifs)
+            {
+                var hist = await _context.Donneeboursiere
+                    .Where(d => d.ActifId == actif.Id)
+                    .OrderBy(d => d.Date)
+                    .ToListAsync();
+
+                if (hist.Count < 30)
+                    return BadRequest($"Historique insuffisant pour {actif.Symbole}.");
+
+                historiques[actif.Symbole] = hist;
+            }
+
+            // 3. Prédictions ML.NET pour chaque actif
+            var predictionService = new PredictionService();
+            var predictions = new Dictionary<string, float[]>();
+            foreach (var actif in actifs)
+                predictions[actif.Symbole] = predictionService
+                    .ForecastPrices(historiques[actif.Symbole], nbJours: 30);
+
+            // 4. Markowitz → 5 portefeuilles optimaux
+            var optimiseur = new OptimiseurPortfolio();
+            var portefeuilles = optimiseur.GenererPortefeuilles(predictions, historiques);
+
+            return Ok(portefeuilles);
+        }
     }
 
 

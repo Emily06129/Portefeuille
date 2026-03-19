@@ -48,14 +48,52 @@ namespace web_portefeuille.Controllers
         }
 
         // GET : /Investir/Resultats
-        public IActionResult Resultats()
+        // GET : /Investir/Resultats
+        public async Task<IActionResult> Resultats()
         {
-            // Récupère les choix depuis la session que l'on convertit en string et liste
-            var budget = HttpContext.Session.GetString("Budget");
-            var actifs = HttpContext.Session.GetString("Actifs")?.Split(",").ToList();
+            // 1. Récupérer budget et actifs depuis la session
+            var budgetStr = HttpContext.Session.GetString("Budget");
+            var actifs = HttpContext.Session.GetString("Actifs")
+                            ?.Split(",")
+                            .ToList();
 
-            ViewBag.Budget = budget;
+            if (actifs == null || actifs.Count < 2)
+                return RedirectToAction("Invest");
+
+            ViewBag.Budget = budgetStr;
             ViewBag.Actifs = actifs;
+
+            try
+            {
+                // 2. Appeler l'endpoint d'optimisation de l'API Portefeuille
+                var json = JsonSerializer.Serialize(actifs);
+                var content = new StringContent(json,
+                    System.Text.Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync(
+                    "http://localhost:5172/api/Donneeboursieres/optimiser", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonReponse = await response.Content.ReadAsStringAsync();
+
+                    // 3. Désérialiser les 5 portefeuilles
+                    var portefeuilles = JsonSerializer.Deserialize<List<PortfolioOptimise>>(
+                        jsonReponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    // 4. Passer à la vue
+                    ViewBag.Portefeuilles = portefeuilles;
+                }
+                else
+                {
+                    ViewBag.Error = "Erreur lors de l'optimisation. Vérifie que les actifs ont un historique.";
+                }
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = $"Impossible de contacter l'API : {ex.Message}";
+            }
 
             return View();
         }
@@ -87,6 +125,6 @@ namespace web_portefeuille.Controllers
             return View();
         }
 
-
+        
     }
 }

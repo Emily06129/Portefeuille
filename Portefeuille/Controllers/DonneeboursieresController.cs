@@ -158,7 +158,7 @@ namespace Portefeuille.Controllers
             return Ok(donnees);
         }
 
-
+        //POST /api/prediction/tous           → lance ML.NET et sauvegarde les prédictions
         [HttpPost("~/api/prediction/tous")]
         public async Task<IActionResult> PredireTousActifs()
         {
@@ -276,6 +276,33 @@ namespace Portefeuille.Controllers
             // 4. Markowitz → 5 portefeuilles optimaux
             var optimiseur = new OptimiseurPortfolio();
             var portefeuilles = optimiseur.GenererPortefeuilles(predictions, historiques);
+
+            // 5. Monte Carlo → VaR + CVaR pour chaque portefeuille
+            var monteCarlo = new MonteCarloService();
+            var symbolesList = actifs.Select(a => a.Symbole!).ToList();
+
+            // Recalculer rendements et covariance pour Monte Carlo
+            double[] rendementsPredits = symbolesList.Select(sym =>
+            {
+                var prixActuel = (double)historiques[sym].Last().Cloture;
+                var prixPredit = (double)predictions[sym].Last();
+                return (prixPredit - prixActuel) / prixActuel;
+            }).ToArray();
+
+            double[,] covariance = optimiseur.GetCovariance(historiques, symbolesList);
+
+            foreach (var p in portefeuilles)
+            {
+                double[] poids = symbolesList
+                    .Select(s => p.Poids!.ContainsKey(s) ? p.Poids[s] : 0.0)
+                    .ToArray();
+
+                var (var95, cvar95) = monteCarlo.CalculerRisque(
+                    poids, rendementsPredits, covariance);
+
+                p.VaR95 = var95;
+                p.CVaR95 = cvar95;
+            }
 
             return Ok(portefeuilles);
         }

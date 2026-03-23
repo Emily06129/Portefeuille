@@ -31,7 +31,7 @@ namespace Portefeuille.Services
         }
 
         // ÉTAPE 1 : Rendements depuis les prédictions ML.NET
-        
+
         private double[] CalculerRendementsPredits(
             Dictionary<string, float[]> predictions,
             Dictionary<string, List<Donneeboursiere>> historiques,
@@ -45,9 +45,9 @@ namespace Portefeuille.Services
             }).ToArray();
         }
 
-        
+
         // ÉTAPE 2 : Matrice de covariance
-        
+
         private double[,] CalculerCovariance(
             Dictionary<string, List<Donneeboursiere>> historiques,
             List<string> symboles)
@@ -93,9 +93,9 @@ namespace Portefeuille.Services
             return cov;
         }
 
-        
+
         // ÉTAPE 3 : Simulations de portefeuilles
-       
+
         private record SimPortfolio(
             double[] Poids,
             double Rendement,
@@ -143,9 +143,9 @@ namespace Portefeuille.Services
             return raw.Select(r => r / somme).ToArray();
         }
 
-      
+
         // ÉTAPE 4 : Extraction des 5 profils
-      
+
         private List<PortfolioOptimise> ExtraireProfilsRisque(
             List<SimPortfolio> sims, List<string> symboles)
         {
@@ -155,8 +155,8 @@ namespace Portefeuille.Services
             // Sélection par percentile de volatilité + max Sharpe
             var profils = new List<(string Nom, SimPortfolio Sim)>
             {
-                ("Défensif",     tries[(int)(total * 0.05)]),
-                ("Conservateur", tries[(int)(total * 0.25)]),
+                ("Très prudent",     tries[(int)(total * 0.05)]),
+                ("Prudent", tries[(int)(total * 0.25)]),
                 ("Équilibré",    sims.MaxBy(s => s.Sharpe)!),   // Max Sharpe
                 ("Dynamique",    tries[(int)(total * 0.75)]),
                 ("Agressif",     tries[(int)(total * 0.95)])
@@ -177,6 +177,14 @@ namespace Portefeuille.Services
                     SharpeRatio = Math.Round(p.Sim.Sharpe, 4)
                 };
             }).ToList();
+        }
+
+        // Méthode publique pour exposer la covariance au controller
+        public double[,] GetCovariance(
+            Dictionary<string, List<Donneeboursiere>> historiques,
+            List<string> symboles)
+        {
+            return CalculerCovariance(historiques, symboles);
         }
     }
 }
